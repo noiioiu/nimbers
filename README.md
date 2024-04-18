@@ -1,0 +1,1 @@
+Finite nimbers in haskell.
