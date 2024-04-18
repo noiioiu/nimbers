@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-type-defaults #-}
+
 -- | In combinatorial game theory, nimbers represent the values of impartial games.  They are the simplest way of making the ordinals into a Field.
 --   See /On Numbers and Games/ by John Conway.
 --
@@ -8,9 +10,13 @@
 --   This module implements /finite/ nimbers.  The set of finite nimbers is the quadratic closure of the field with two elements.
 module Nimbers where
 
+import Control.Monad
+import Data.Bits
 import Data.Set qualified as S
+import Data.Vector qualified as V
+import Data.Vector.Mutable qualified as M
 
-type Natural = Int
+type Natural = Integer
 
 -- | A finite nimber is represented as a sum of distinct 2-powers, each of which is represented as a product of distinct Fermat 2-powers.
 --   Hence @'Nimber' {'getNimber' = s}@ represents \(\sum\limits_{t \in s} \prod\limits_{n \in t} 2^{2^n}\).  This representation makes sums and products easy to calculate.
@@ -63,6 +69,36 @@ instance Num Nimber where
   negate = id
   abs = id
   signum = id
+
+instance Fractional Nimber where
+  fromRational _ = error "Cannot map from field of characteristic 0 to characteristic 2"
+  recip 0 = error "Divide by zero"
+  recip n@Nimber {getNimber = s} =
+    let m = 1 + foldl max 0 (S.unions s) -- 2^2^m is the order of the smallest field containing n
+        sw i j u v = do
+          a <- M.read v i
+          b <- M.read v j
+          if b `testBit` (2 ^ m - 1 - i)
+            then do M.write v i b
+                    M.write v j a
+                    a' <- M.read u i
+                    b' <- M.read u j
+                    M.write u i b'
+                    M.write u j a'
+            else sw i (j + 1) u v
+        pivot :: (Bits a, M.PrimMonad m) => M.MVector (M.PrimState m) a -> M.MVector (M.PrimState m) a -> Int -> m ()
+        pivot u v i = do sw i i u v
+                         p <- M.read u i
+                         q <- M.read v i
+                         forM_ [i+1..2^m-1] $ \j -> do a <- M.read v j
+                                                       when (a `testBit` (2^m-1-i)) $ M.modify v (xor q) j >> M.modify u (xor p) j
+        r = V.create $
+          do
+            tab1 <- M.generate (2 ^ m) (2 ^) -- All two-powers less than 2^2^m
+            tab2 <- M.generate (2 ^ m) (nimberToNatural . (n *) . fromIntegral . (2 ^)) -- n times all two-powers less than 2^2^m
+            forM_ [0..2^m-1] $ pivot tab1 tab2
+            pure tab1
+     in fromIntegral $ r V.! (2 ^ m - 1)
 
 mex :: S.Set Int -> Int
 mex s = if 0 `notElem` s then 0 else 1 + mex (S.map (+ (-1)) s)
