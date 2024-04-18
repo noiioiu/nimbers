@@ -39,14 +39,16 @@ twoPowers m =
 delta :: (Ord a) => S.Set a -> S.Set a -> S.Set a
 delta x y = (x S.\\ y) `S.union` (y S.\\ x)
 
+-- | Finite nimber addition is calculated as follows: the nimber sum of a two-power and itself is 0, while the nimber sum of two distinct two-powers is their ordinary sum.
+--
+--   Finite nimber multiplication is calculated as follows: the nimber square of a Fermat two-power is its sesquimultiple, while the nimber product of two distinct Fermat two-powers is their ordinary product.
+--   The sesquimultiple of a Fermat two-power is equal to itself plus the product of all smaller Fermat two-powers.
+--
+--  @'abs'@ and @'signum'@ don't really make sense for nimbers.  They are defined as @'id'@ here.
 instance Num Nimber where
   fromInteger = Nimber . S.map twoPowers . twoPowers . abs . fromIntegral
-
-  -- \| Finite nimber addition is calculated as follows: the nimber sum of a two-power and itself is 0, while the nimber sum of two distinct two-powers is their ordinary sum.
   Nimber a + Nimber b = Nimber $ (a S.\\ b) `S.union` (b S.\\ a)
   (-) = (+)
-
-  -- \| Finite nimber multiplication is calculated as follows: the nimber square of a Fermat two-power is its sesquimultiple, while the nimber product of two distinct Fermat two-powers is their ordinary product.
   a * b
     | a == 1 = b
     | b == 1 = a
