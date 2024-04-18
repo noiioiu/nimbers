@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Evaluate" #-}
 
 module Main (main) where
 
@@ -12,6 +14,12 @@ instance Arbitrary Nimber where
 
 prop_neg :: Nimber -> Bool
 prop_neg a = a - a == 0
+
+prop_add_id :: Nimber -> Bool
+prop_add_id a = (a + 0) == a && (0 + a == a)
+
+prop_mult_id :: Nimber -> Bool
+prop_mult_id a = (a * 1) == a && (1 * a == a)
 
 prop_assoc_add :: Nimber -> Nimber -> Nimber -> Bool
 prop_assoc_add a b c = a + (b + c) == (a + b) + c
@@ -29,7 +37,7 @@ prop_inv :: Nimber -> Bool
 prop_inv a = a == 0 || recip (recip a) == a
 
 main :: IO ()
-main = check prop_neg >> check prop_assoc_add >> check prop_assoc_mul >> check prop_distrib >> check prop_recip >> check prop_inv
+main = check prop_neg >> check prop_add_id >> check prop_mult_id >> check prop_assoc_add >> check prop_assoc_mul >> check prop_distrib >> check prop_recip >> check prop_inv
   where
     check prop = do
       result <- verboseCheckResult prop
