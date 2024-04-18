@@ -70,6 +70,8 @@ instance Num Nimber where
   abs = id
   signum = id
 
+-- | The finite nimbers are a field of characteristic 2.  There is no field homomorphism from the rationals to the nimbers, so @'fromRational'@ is always an error.
+--   Division is implemented using gaussian elimination.
 instance Fractional Nimber where
   fromRational _ = error "Cannot map from field of characteristic 0 to characteristic 2"
   recip 0 = error "Divide by zero"
