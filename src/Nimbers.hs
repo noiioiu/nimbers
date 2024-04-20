@@ -12,11 +12,15 @@ module Nimbers where
 
 import Data.Set qualified as S
 
+-- | Small natural numbers.
+type Nat = Int
+
+-- | Arbitrarily large natural numbers.
 type Natural = Integer
 
 -- | A finite nimber is represented as a sum of distinct 2-powers, each of which is represented as a product of distinct Fermat 2-powers.
 --   Hence @'Nimber' {'getNimber' = s}@ represents \(\sum\limits_{t \in s} \prod\limits_{n \in t} 2^{2^n}\).  This representation makes sums and products easy to calculate.
-newtype Nimber = Nimber {getNimber :: S.Set (S.Set Natural)}
+newtype Nimber = Nimber {getNimber :: S.Set (S.Set Nat)}
   deriving (Show, Eq)
 
 nimberToNatural :: Nimber -> Natural
@@ -31,7 +35,7 @@ instance Enum Nimber where
   toEnum = fromInteger . fromIntegral
   fromEnum = fromIntegral . nimberToNatural
 
-twoPowers :: Natural -> S.Set Natural
+twoPowers :: (Integral a, Integral b) => a -> S.Set b
 twoPowers 0 = S.empty
 twoPowers m =
   if even m
@@ -49,7 +53,7 @@ delta x y = (x S.\\ y) `S.union` (y S.\\ x)
 --  @'abs'@ and @'signum'@ don't really make sense for nimbers.  They are defined as @'id'@ here.
 instance Num Nimber where
   fromInteger = Nimber . S.map twoPowers . twoPowers . abs . fromIntegral
-  Nimber a + Nimber b = Nimber $ (a S.\\ b) `S.union` (b S.\\ a)
+  (+) = (Nimber .) . (. getNimber) . delta . getNimber
   (-) = (+)
   a * b
     | a == 1 = b
@@ -72,12 +76,12 @@ instance Fractional Nimber where
   recip 0 = error "Divide by zero"
   recip 1 = 1
   recip Nimber {getNimber = s} =
-    let m     = foldl max 0 $ S.unions s          -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
-        aD    = Nimber $ S.filter (S.member m) s  -- n = aD+b
-        b     = Nimber $ S.filter (S.notMember m) s
-        a     = Nimber $ S.map (S.delete m) $ getNimber aD
-        semiD = Nimber . S.singleton $ S.fromList [0..m-1] -- semimultiple of D
-     in (aD+a+b) / (semiD * a^2 + a*b + b^2)
+    let m = foldl max 0 $ S.unions s -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+        aD = Nimber $ S.filter (S.member m) s -- n = aD+b
+        b = Nimber $ S.filter (S.notMember m) s
+        a = Nimber $ S.map (S.delete m) $ getNimber aD
+        semiD = Nimber . S.singleton $ S.fromList [0 .. m - 1] -- semimultiple of D
+     in (aD + a + b) / (semiD * a ^ 2 + a * b + b ^ 2)
 
 mex :: S.Set Int -> Int
 mex s = if 0 `notElem` s then 0 else 1 + mex (S.map (+ (-1)) s)
