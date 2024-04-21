@@ -12,8 +12,7 @@
 module Data.Nimber where
 
 import Data.Bits
-
-type Natural = Integer
+import Numeric.Natural
 
 newtype Nimber = Nimber {getNimber :: Natural}
   deriving newtype (Show, Eq, Ord, Enum, Bits)
