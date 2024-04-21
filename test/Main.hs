@@ -39,6 +39,10 @@ prop_recip a = a == 0 || a / a == 1
 prop_inv :: Nimber -> Bool
 prop_inv a = a == 0 || recip (recip a) == a
 
+prop_sqrt :: Nimber -> Bool
+prop_sqrt a = sqrt a * sqrt a == a
+
+
 mex :: (Functor f, Foldable f, Eq b, Num b, Num a) => f b -> a
 mex s = if 0 `notElem` s then 0 else 1 + mex (fmap (+ (-1)) s)
 
