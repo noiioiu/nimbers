@@ -60,9 +60,15 @@ nimberProdTable = fmap mul <$> [(i,) <$> [0 ..] | i <- [0 ..]]
   where
     mul (a, b) = mex $ [(nimberProdTable !! a' !! b) `nimberAdd` (nimberProdTable !! a !! b') `nimberAdd` (nimberProdTable !! a' !! b') | a' <- [0 .. a - 1], b' <- [0 .. b - 1]]
 
+--prop_def_add :: Small Int -> Small Int -> Bool
+--prop_def_add Small {getSmall = a} Small {getSmall = b} = abs a `nimberAdd` abs b == fromIntegral (getNimber $ fromIntegral a + fromIntegral b)
+
+--prop_def_mul :: Small Int -> Small Int -> Bool
+--prop_def_mul Small {getSmall = a} Small {getSmall = b} = abs a `nimberMul` abs b == fromIntegral (getNimber $ fromIntegral a * fromIntegral b)
+
 pure []
 runTests :: IO Bool
-runTests = $forAllProperties $ verboseCheckWithResult stdArgs {maxSuccess = 200}
+runTests = $forAllProperties $ verboseCheckWithResult stdArgs {maxSuccess = 500}
 
 main :: IO ()
 main = do success <- runTests
