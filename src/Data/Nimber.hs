@@ -67,3 +67,30 @@ instance Fractional Nimber where
         b = n .^. aD
         semiD = bit (bit m - 1) -- semimultiple of D
      in (aD + a + b) / (semiD * a ^ 2 + b * (a + b))
+
+-- | The only reason this instance exists is to define square roots.  None of the other @'Floating'@ methods apply to @'Nimber'@s.
+instance Floating Nimber where
+  sqrt 0 = 0
+  sqrt 1 = 1
+  sqrt n =
+    let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+        a = n `shiftR` bit m -- n = aD+b
+        aD = a `shiftL` bit m
+        b = n .^. aD
+        semiD = bit (bit m - 1) -- semimultiple of D
+     in sqrt a `shiftL` bit m + sqrt a * sqrt semiD + sqrt b
+  pi = error "π is not a nimber"
+  exp _ = error "exp undefined for nimbers"
+  log _ = error "log undefined for nimbers"
+  sin _ = error "Trigonometric functions undefined for nimbers"
+  cos _ = error "Trigonometric functions undefined for nimbers"
+  tan _ = error "Trigonometric functions undefined for nimbers"
+  asin _ = error "Trigonometric functions undefined for nimbers"
+  acos _ = error "Trigonometric functions undefined for nimbers"
+  atan _ = error "Trigonometric functions undefined for nimbers"
+  sinh _ = error "Hyperbolic functions undefined for nimbers"
+  cosh _ = error "Hyperbolic functions undefined for nimbers"
+  tanh _ = error "Hyperbolic functions undefined for nimbers"
+  asinh _ = error "Hyperbolic functions undefined for nimbers"
+  acosh _ = error "Hyperbolic functions undefined for nimbers"
+  atanh _ = error "Hyperbolic functions undefined for nimbers"
