@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Evaluate" #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Main (main) where
 
@@ -8,9 +9,10 @@ import Control.Monad (unless)
 import Nimbers
 import System.Exit (exitFailure)
 import Test.QuickCheck
+import Data.Word (Word64)
 
 instance Arbitrary Nimber where
-  arbitrary = fromInteger <$> arbitrary
+  arbitrary = fromIntegral @Word64 . getLarge <$> arbitrary
 
 prop_neg :: Nimber -> Bool
 prop_neg a = a - a == 0
@@ -36,9 +38,10 @@ prop_recip a = a == 0 || a / a == 1
 prop_inv :: Nimber -> Bool
 prop_inv a = a == 0 || recip (recip a) == a
 
+pure []
+runTests :: IO Bool
+runTests = $forAllProperties $ verboseCheckWithResult stdArgs {maxSuccess = 200}
+
 main :: IO ()
-main = check prop_neg >> check prop_add_id >> check prop_mult_id >> check prop_assoc_add >> check prop_assoc_mul >> check prop_distrib >> check prop_recip >> check prop_inv
-  where
-    check prop = do
-      result <- verboseCheckResult prop
-      unless (isSuccess result) exitFailure
+main = do success <- runTests
+          unless success exitFailure
