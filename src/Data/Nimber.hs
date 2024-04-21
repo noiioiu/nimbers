@@ -8,7 +8,7 @@
 --
 --   Nimber multiplication is defined by \(\alpha\cdot\beta = \operatorname{mex}\{\alpha'\cdot\beta + \alpha\cdot\beta' - \alpha'\cdot\beta'\}\).
 --
---   This module implements /finite/ nimbers.  The set of finite nimbers is the quadratic closure of the field with two elements.
+--   This module implements /finite/ nimbers, which form the smallest quadratically closed field of characteristic 2.
 module Data.Nimber where
 
 import Data.Bits
@@ -66,6 +66,16 @@ sqr n =
       semiD = bit (bit m - 1) -- semimultiple of D
       sqra = sqr a
    in sqra `shiftL` bit m + sqra * semiD + sqr b
+
+-- | Raise a @'Nimber'@ to an integral power.  Faster than using '^' or '^^'.
+pow :: (Integral a) => Nimber -> a -> Nimber
+_ `pow` 0 = 1
+a `pow` n
+  | n < 0 = recip a `pow` negate n
+  | otherwise = if even n then sqr a `pow` quot n 2 else powAcc (sqr a) (quot n 2) a
+  where
+    powAcc _ 0 x = x
+    powAcc b m x = if even m then powAcc (sqr b) (quot m 2) x else powAcc (sqr b) (quot m 2) (b * x)
 
 -- | The finite nimbers are a field of characteristic 2.  There is no field homomorphism from the rationals to the nimbers, so @'fromRational'@ is always an error.
 instance Fractional Nimber where
