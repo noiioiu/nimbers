@@ -46,7 +46,7 @@ instance Num Nimber where
         y <- twoPowers b
         let cs = twoPowers $ x .&. y
             p = product $ fmap (\c -> bit (bit c) + bit (bit c - 1)) cs
-            d = bit $ x `xor` y
+            d = bit $ x .^. y
         pure $ p * d
   negate = id
   abs = id
@@ -61,6 +61,6 @@ instance Fractional Nimber where
     let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
         a = n `shiftR` bit m -- n = aD+b
         aD = a `shiftL` bit m
-        b = n `xor` aD
+        b = n .^. aD
         semiD = bit (bit m - 1) -- semimultiple of D
      in (aD + a + b) / (semiD * a ^ 2 + a * b + b ^ 2)
