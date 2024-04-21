@@ -40,8 +40,8 @@ instance Num Nimber where
   (-) = (+)
   0 * _ = 0
   _ * 0 = 0
-  1*b = b
-  a*1 = a
+  1 * b = b
+  a * 1 = a
   a * b =
     let m = max (floorLog @Int (floorLog a)) (floorLog @Int (floorLog b)) -- D = 2^2^m is the largest Fermat 2-power less than or equal to both a and b
         semiD = bit (bit m - 1) -- semimultiple of D
@@ -49,7 +49,8 @@ instance Num Nimber where
         a2 = a .^. (a1 `shiftL` bit m)
         b1 = b `shiftR` bit m -- b = b1D+b2
         b2 = b .^. (b1 `shiftL` bit m)
-     in ((a1*b1 + a2*b1 + a1*b2) `shiftL` bit m) + a1*b1*semiD + a2*b2
+        c = a2 * b2
+     in (((a1 + a2) * (b1 + b2) - c) `shiftL` bit m) + a1 * b1 * semiD + c
   negate = id
   abs = id
   signum = id
