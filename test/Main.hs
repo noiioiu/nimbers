@@ -40,7 +40,13 @@ prop_inv :: Nimber -> Bool
 prop_inv a = a == 0 || recip (recip a) == a
 
 prop_sqr :: Nimber -> Bool
-prop_sqr a = sqr a == a*a
+prop_sqr a = sqr a == a * a
+
+prop_pow :: NonZero Nimber -> Integer -> Bool
+prop_pow NonZero {getNonZero = a} n = pow a n == a ^^ n
+
+prop_pow_zero :: NonNegative Integer -> Bool
+prop_pow_zero NonNegative {getNonNegative = n} = 0 `pow` n == if n == 0 then 1 else 0
 
 prop_sqrt :: Nimber -> Bool
 prop_sqrt a = sqr (sqrt a) == a
