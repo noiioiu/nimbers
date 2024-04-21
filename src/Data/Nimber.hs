@@ -63,4 +63,4 @@ instance Fractional Nimber where
         aD = a `shiftL` bit m
         b = n .^. aD
         semiD = bit (bit m - 1) -- semimultiple of D
-     in (aD + a + b) / (semiD * a ^ 2 + a * b + b ^ 2)
+     in (aD + a + b) / (semiD * a ^ 2 + b * (a + b))
