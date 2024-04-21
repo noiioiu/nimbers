@@ -38,16 +38,18 @@ instance Num Nimber where
   fromInteger = Nimber . fromIntegral . abs
   (+) = xor
   (-) = (+)
-  a * b
-    | a == 1 = b
-    | b == 1 = a
-    | otherwise = sum $ do
-        x <- twoPowers a
-        y <- twoPowers b
-        let cs = twoPowers $ x .&. y
-            p = product $ fmap (\c -> bit (bit c) + bit (bit c - 1)) cs
-            d = bit $ x .^. y
-        pure $ p * d
+  0 * _ = 0
+  _ * 0 = 0
+  1*b = b
+  a*1 = a
+  a * b =
+    let m = max (floorLog @Int (floorLog a)) (floorLog @Int (floorLog b)) -- D = 2^2^m is the largest Fermat 2-power less than or equal to both a and b
+        semiD = bit (bit m - 1) -- semimultiple of D
+        a1 = a `shiftR` bit m -- a = a1D+a2
+        a2 = a .^. (a1 `shiftL` bit m)
+        b1 = b `shiftR` bit m -- b = b1D+b2
+        b2 = b .^. (b1 `shiftL` bit m)
+     in ((a1*b1 + a2*b1 + a1*b2) `shiftL` bit m) + a1*b1*semiD + a2*b2
   negate = id
   abs = id
   signum = id
