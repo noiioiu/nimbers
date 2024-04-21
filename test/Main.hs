@@ -6,7 +6,7 @@
 module Main (main) where
 
 import Control.Monad (unless)
-import Nimbers
+import Data.Nimber
 import System.Exit (exitFailure)
 import Test.QuickCheck
 import Data.Word (Word64)
