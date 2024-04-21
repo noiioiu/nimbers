@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
 -- | In combinatorial game theory, nimbers represent the values of impartial games.  They are the simplest way of making the ordinals into a Field.
@@ -10,40 +11,22 @@
 --   This module implements /finite/ nimbers.  The set of finite nimbers is the quadratic closure of the field with two elements.
 module Nimbers where
 
-import Data.Set qualified as S
+import Data.Bits
 
--- | Small natural numbers.
-type Nat = Int
-
--- | Arbitrarily large natural numbers.
 type Natural = Integer
 
--- | A finite nimber is represented as a sum of distinct 2-powers, each of which is represented as a product of distinct Fermat 2-powers.
---   Hence @'Nimber' {'getNimber' = s}@ represents \(\sum\limits_{t \in s} \prod\limits_{n \in t} 2^{2^n}\).  This representation makes sums and products easy to calculate.
-newtype Nimber = Nimber {getNimber :: S.Set (S.Set Nat)}
-  deriving (Show, Eq)
+newtype Nimber = Nimber {getNimber :: Natural}
+  deriving newtype (Show, Eq, Ord, Enum, Bits)
 
-nimberToNatural :: Nimber -> Natural
--- nimberToInteger = sum . S.map ((^) @_ @Integer 2 . sum . S.map (2^)) . getNimber
-nimberToNatural = sum . S.map (product . S.map ((^) @_ @Natural 2 . (2 ^))) . getNimber
-
--- | Nimbers are ordinals, so they are ordered.  They also form a field, but they are not an ordered field.
-instance Ord Nimber where
-  n `compare` m = nimberToNatural n `compare` nimberToNatural m
-
-instance Enum Nimber where
-  toEnum = fromInteger . fromIntegral
-  fromEnum = fromIntegral . nimberToNatural
-
-twoPowers :: (Integral a, Integral b) => a -> S.Set b
-twoPowers 0 = S.empty
+twoPowers :: (Num a, Bits a, Integral b) => a -> [b]
+twoPowers 0 = []
 twoPowers m =
-  if even m
-    then S.map (+ 1) $ twoPowers (m `div` 2)
-    else S.insert 0 . S.map (+ 1) $ twoPowers (m `div` 2)
+  (if m `testBit` 0 then (0 :) else id) . fmap (+ 1) $ twoPowers (m `shiftR` 1)
 
-delta :: (Ord a) => S.Set a -> S.Set a -> S.Set a
-delta x y = (x S.\\ y) `S.union` (y S.\\ x)
+floorLog :: (Num a, Bits a, Num b) => a -> b
+floorLog 0 = error "Logarithm of 0"
+floorLog 1 = 0
+floorLog n = 1 + floorLog (n `shiftR` 1)
 
 -- | Finite nimber addition is calculated as follows: the nimber sum of a two-power and itself is 0, while the nimber sum of two distinct two-powers is their ordinary sum.
 --
@@ -52,19 +35,18 @@ delta x y = (x S.\\ y) `S.union` (y S.\\ x)
 --
 --  @'abs'@ and @'signum'@ don't really make sense for nimbers.  They are defined as @'id'@ here.
 instance Num Nimber where
-  fromInteger = Nimber . S.map twoPowers . twoPowers . abs . fromIntegral
-  (+) = (Nimber .) . (. getNimber) . delta . getNimber
+  fromInteger = Nimber . fromIntegral . abs
+  (+) = xor
   (-) = (+)
   a * b
     | a == 1 = b
     | b == 1 = a
     | otherwise = sum $ do
-        x <- S.toList $ getNimber a
-        y <- S.toList $ getNimber b
-        let cs = x `S.intersection` y
-            p = product $ S.map (\c -> Nimber $ S.fromList [S.singleton c, S.fromList [0 .. c - 1]]) cs
-            d = Nimber $ S.singleton $ x `delta` y
-        -- (*d) . Nimber . S.singleton <$> S.toList (getNimber p)
+        x <- twoPowers a
+        y <- twoPowers b
+        let cs = twoPowers $ x .&. y
+            p = product $ fmap (\c -> bit (bit c) + bit (bit c - 1)) cs
+            d = bit $ x `xor` y
         pure $ p * d
   negate = id
   abs = id
@@ -75,31 +57,10 @@ instance Fractional Nimber where
   fromRational _ = error "Cannot map from field of characteristic 0 to characteristic 2"
   recip 0 = error "Divide by zero"
   recip 1 = 1
-  recip Nimber {getNimber = s} =
-    let m = foldl max 0 $ S.unions s -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
-        aD = Nimber $ S.filter (S.member m) s -- n = aD+b
-        b = Nimber $ S.filter (S.notMember m) s
-        a = Nimber $ S.map (S.delete m) $ getNimber aD
-        semiD = Nimber . S.singleton $ S.fromList [0 .. m - 1] -- semimultiple of D
+  recip n =
+    let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+        a = n `shiftR` bit m -- n = aD+b
+        aD = a `shiftL` bit m
+        b = n `xor` aD
+        semiD = bit (bit m - 1) -- semimultiple of D
      in (aD + a + b) / (semiD * a ^ 2 + a * b + b ^ 2)
-
-mex :: S.Set Int -> Int
-mex s = if 0 `notElem` s then 0 else 1 + mex (S.map (+ (-1)) s)
-
--- | Compute nimber sum directly from the definition.  This is very slow.
-nimberAdd :: Int -> Int -> Int
-nimberAdd = (!!) . (nimberSumTable !!)
-
-nimberSumTable :: [[Int]]
-nimberSumTable = fmap add <$> [(i,) <$> [0 ..] | i <- [0 ..]]
-  where
-    add (a, b) = mex $ S.fromList [nimberSumTable !! a' !! b | a' <- [0 .. a - 1]] `S.union` S.fromList [nimberSumTable !! a !! b' | b' <- [0 .. b - 1]]
-
--- | Compute nimber product directly from the definition.  This is very slow.
-nimberMul :: Int -> Int -> Int
-nimberMul = (!!) . (nimberProdTable !!)
-
-nimberProdTable :: [[Int]]
-nimberProdTable = fmap mul <$> [(i,) <$> [0 ..] | i <- [0 ..]]
-  where
-    mul (a, b) = mex $ S.fromList [(nimberProdTable !! a' !! b) `nimberAdd` (nimberProdTable !! a !! b') `nimberAdd` (nimberProdTable !! a' !! b') | a' <- [0 .. a - 1], b' <- [0 .. b - 1]]
