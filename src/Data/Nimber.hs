@@ -9,7 +9,7 @@
 --   Nimber multiplication is defined by \(\alpha\cdot\beta = \operatorname{mex}\{\alpha'\cdot\beta + \alpha\cdot\beta' - \alpha'\cdot\beta'\}\).
 --
 --   This module implements /finite/ nimbers.  The set of finite nimbers is the quadratic closure of the field with two elements.
-module Nimbers where
+module Data.Nimber where
 
 import Data.Bits
 
