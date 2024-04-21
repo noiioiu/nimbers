@@ -55,19 +55,6 @@ instance Num Nimber where
   abs = id
   signum = id
 
--- | The finite nimbers are a field of characteristic 2.  There is no field homomorphism from the rationals to the nimbers, so @'fromRational'@ is always an error.
-instance Fractional Nimber where
-  fromRational _ = error "Cannot map from field of characteristic 0 to characteristic 2"
-  recip 0 = error "Divide by zero"
-  recip 1 = 1
-  recip n =
-    let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
-        a = n `shiftR` bit m -- n = aD+b
-        aD = a `shiftL` bit m
-        b = n .^. aD
-        semiD = bit (bit m - 1) -- semimultiple of D
-     in (aD + a + b) / (semiD * a * a + b * (a + b))
-
 -- | Squaring function.  Faster than multiplying @n@ by itself.
 sqr :: Nimber -> Nimber
 sqr 0 = 0
@@ -80,6 +67,19 @@ sqr n =
       semiD = bit (bit m - 1) -- semimultiple of D
       sqra = sqr a
    in sqra `shiftL` bit m + sqra * semiD + sqr b
+
+-- | The finite nimbers are a field of characteristic 2.  There is no field homomorphism from the rationals to the nimbers, so @'fromRational'@ is always an error.
+instance Fractional Nimber where
+  fromRational _ = error "Cannot map from field of characteristic 0 to characteristic 2"
+  recip 0 = error "Divide by zero"
+  recip 1 = 1
+  recip n =
+    let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+        a = n `shiftR` bit m -- n = aD+b
+        aD = a `shiftL` bit m
+        b = n .^. aD
+        semiD = bit (bit m - 1) -- semimultiple of D
+     in (aD + a + b) / (semiD * sqr a + b * (a + b))
 
 -- | The only reason this instance exists is to define square roots.  None of the other @'Floating'@ methods apply to @'Nimber'@s.
 instance Floating Nimber where
