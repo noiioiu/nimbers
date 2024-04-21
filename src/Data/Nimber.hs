@@ -66,7 +66,20 @@ instance Fractional Nimber where
         aD = a `shiftL` bit m
         b = n .^. aD
         semiD = bit (bit m - 1) -- semimultiple of D
-     in (aD + a + b) / (semiD * a ^ 2 + b * (a + b))
+     in (aD + a + b) / (semiD * a * a + b * (a + b))
+
+-- | Squaring function.  Faster than multiplying @n@ by itself.
+sqr :: Nimber -> Nimber
+sqr 0 = 0
+sqr 1 = 1
+sqr n =
+  let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+      a = n `shiftR` bit m -- n = aD+b
+      aD = a `shiftL` bit m
+      b = n .^. aD
+      semiD = bit (bit m - 1) -- semimultiple of D
+      sqra = sqr a
+   in sqra `shiftL` bit m + sqra * semiD + sqr b
 
 -- | The only reason this instance exists is to define square roots.  None of the other @'Floating'@ methods apply to @'Nimber'@s.
 instance Floating Nimber where
@@ -78,7 +91,8 @@ instance Floating Nimber where
         aD = a `shiftL` bit m
         b = n .^. aD
         semiD = bit (bit m - 1) -- semimultiple of D
-     in sqrt a `shiftL` bit m + sqrt a * sqrt semiD + sqrt b
+        sqrta = sqrt a
+     in sqrta `shiftL` bit m + sqrta * sqrt semiD + sqrt b
   pi = error "π is not a nimber"
   exp _ = error "exp undefined for nimbers"
   log _ = error "log undefined for nimbers"
