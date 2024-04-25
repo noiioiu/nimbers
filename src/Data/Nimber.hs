@@ -97,7 +97,7 @@ instance Fractional Nimber where
               aD = a `shiftL` bit k
               b = l .^. aD
               semiD = bit (bit k - 1) -- semimultiple of D
-           in mult' k (aD + a + b) $ recip' (k - 1) (mult' (k - 1) semiD (sqr' (k - 1) a) + mult' (k - 1) b (a + b))
+           in mult' k (l + a) $ recip' (k - 1) (mult' (k - 1) semiD (sqr' (k - 1) a) + mult' (k - 1) b (a + b))
      in recip' m n
 
 -- | The only reason this instance exists is to define square roots.  None of the other @'Floating'@ methods apply to @'Nimber'@s.
