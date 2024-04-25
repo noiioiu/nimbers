@@ -15,6 +15,7 @@ module Data.Nimber
     sqr,
     pow,
     artinSchreierRoot,
+    solveQuadratic,
   )
 where
 
@@ -165,3 +166,8 @@ artinSchreierRoot n =
           let y = bit $ bit m' - 1
               z = artinSchreierRoot $ sqr y + y + n
            in y + z
+
+-- | @'solveQuadratic' p q@ returns the solutions to the equation \(X^2 + px + q = 0\).
+solveQuadratic :: Nimber -> Nimber -> (Nimber, Nimber)
+solveQuadratic 0 q = (sqrt q, sqrt q)
+solveQuadratic p q = let x = p * artinSchreierRoot (q / sqr p) in (x, x + p)
