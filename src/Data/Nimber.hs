@@ -32,7 +32,7 @@ floorLog n = 1 + floorLog (n `shiftR` 1)
 --   Finite nimber multiplication is calculated as follows: the nimber square of a Fermat two-power is its sesquimultiple, while the nimber product of two distinct Fermat two-powers is their ordinary product.
 --   The sesquimultiple of a Fermat two-power is equal to itself plus the product of all smaller Fermat two-powers.
 --
---  @'abs'@ and @'signum'@ don't really make sense for nimbers.  They are defined as @'id'@ here.
+--  @'abs'@ and @'signum'@ don't really make sense for nimbers.
 instance Num Nimber where
   fromInteger = Nimber . fromIntegral . abs
   (+) = xor
@@ -58,7 +58,8 @@ instance Num Nimber where
      in mult' m a b
   negate = id
   abs = id
-  signum = id
+  signum 0 = 0
+  signum _ = 1
 
 -- | Squaring function.  Faster than multiplying @n@ by itself.
 sqr :: Nimber -> Nimber
