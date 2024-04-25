@@ -59,11 +59,13 @@ prop_sqrt a = sqr (sqrt a) == a
 prop_as :: Nimber -> Bool
 prop_as a = let x = artinSchreierRoot a in sqr x + x == a && not (x `testBit` 0)
 
-prop_quadratic :: Nimber -> Nimber -> Bool
-prop_quadratic p q =
+prop_quadratic :: Nimber -> Nimber -> Nimber -> Bool
+prop_quadratic p q r =
   let (x, y) = solveQuadratic p q
    in sqr x + p * x + q == 0
         && sqr y + p * y + q == 0
+        && (r - x) * (r - y) == sqr r + p * r + q
+        && x <= y
 
 mex :: (Functor f, Foldable f, Eq b, Num b, Num a) => f b -> a
 mex s = if 0 `notElem` s then 0 else 1 + mex (fmap (+ (-1)) s)

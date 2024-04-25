@@ -170,4 +170,4 @@ artinSchreierRoot n =
 -- | @'solveQuadratic' p q@ returns the solutions to the equation \(X^2 + px + q = 0\).
 solveQuadratic :: Nimber -> Nimber -> (Nimber, Nimber)
 solveQuadratic 0 q = (sqrt q, sqrt q)
-solveQuadratic p q = let x = p * artinSchreierRoot (q / sqr p) in (x, x + p)
+solveQuadratic p q = let x = p * artinSchreierRoot (q / sqr p) in (min x $ x + p, max x $ x + p)
