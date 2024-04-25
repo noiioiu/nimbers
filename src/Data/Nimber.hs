@@ -27,12 +27,10 @@ floorLog 0 = error "Logarithm of 0"
 floorLog 1 = 0
 floorLog n = 1 + floorLog (n `shiftR` 1)
 
--- | Finite nimber addition is calculated as follows: the nimber sum of a two-power and itself is 0, while the nimber sum of two distinct two-powers is their ordinary sum.
+-- | Finite nimber addition is calculated as follows: the nimber sum of a two-power and itself is 0, while the nimber sum of a set of distinct two-powers is their ordinary sum.
 --
---   Finite nimber multiplication is calculated as follows: the nimber square of a Fermat two-power is its sesquimultiple, while the nimber product of two distinct Fermat two-powers is their ordinary product.
+--   Finite nimber multiplication is calculated as follows: the nimber square of a Fermat two-power is its sesquimultiple, while the nimber product of a set of distinct Fermat two-powers is their ordinary product.
 --   The sesquimultiple of a Fermat two-power is equal to itself plus the product of all smaller Fermat two-powers.
---
---  @'abs'@ and @'signum'@ don't really make sense for nimbers.
 instance Num Nimber where
   fromInteger = Nimber . fromIntegral . abs
   (+) = xor
