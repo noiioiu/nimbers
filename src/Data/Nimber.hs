@@ -52,7 +52,7 @@ mult' m a b =
 instance Num Nimber where
   fromInteger = Nimber . fromIntegral . abs
   (+) = xor
-  (-) = (+)
+  (-) = xor
   a * b =
     let m = max (floorLog @Int (floorLog a)) (floorLog @Int (floorLog b)) -- D = 2^2^m is the largest Fermat 2-power less than or equal to both a and b
      in mult' m a b
@@ -111,7 +111,7 @@ instance Floating Nimber where
           let a = l .>>. bit k -- n = aD+b
               aD = a .<<. bit k
               b = l .^. aD
-              semiD = bit (bit k - 1) -- semimultiple of D
+              semiD = bit $ bit k - 1 -- semimultiple of D
               sqrta = sqrt' (k - 1) a
            in sqrta .<<. bit k + mult' (k - 1) sqrta (sqrt' (k - 1) semiD) + sqrt' (k - 1) b
      in sqrt' m n
