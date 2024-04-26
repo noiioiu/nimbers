@@ -28,7 +28,6 @@ newtype Nimber = Nimber {getNimber :: Natural}
 -- | Index of highest-order set bit, or -1 if there are none.
 floorLog :: (Num a, Bits a, Num b) => a -> b
 floorLog 0 = -1
-floorLog 1 = 0
 floorLog n = 1 + floorLog (n `shiftR` 1)
 
 mult' :: Int -> Nimber -> Nimber -> Nimber
@@ -69,8 +68,8 @@ sqr' m n =
       aD = a `shiftL` bit m
       b = n .^. aD
       semiD = bit (bit m - 1) -- semimultiple of D
-      sqra = sqr' (m - 1) a
-   in sqra `shiftL` bit m + mult' (m - 1) sqra semiD + sqr' (m - 1) b
+      a2 = sqr' (m - 1) a -- a^2
+   in a2 `shiftL` bit m + mult' (m - 1) a2 semiD + sqr' (m - 1) b
 
 -- | Squaring function.  Faster than multiplying @n@ by itself.
 sqr :: Nimber -> Nimber
