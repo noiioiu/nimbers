@@ -26,9 +26,10 @@ newtype Nimber = Nimber {getNimber :: Natural}
   deriving newtype (Show, Eq, Ord, Enum, Bits)
 
 -- | Index of highest-order set bit, or -1 if there are none.
-floorLog :: (Num a, Bits a, Num b) => a -> b
-floorLog 0 = -1
-floorLog n = 1 + floorLog (n .>>. 1)
+floorLog :: (Bits a, Num b) => a -> b
+floorLog n
+  | n == zeroBits = -1
+  | otherwise = 1 + floorLog (n .>>. 1)
 
 mult' :: Int -> Nimber -> Nimber -> Nimber
 mult' _ 0 _ = 0
