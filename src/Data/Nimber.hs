@@ -84,7 +84,7 @@ x `pow` n
   | n < 0 = recip x `pow` negate n
   | otherwise =
       let m = floorLog @Int $ floorLog x
-       in product . fmap snd . filter (testBit n . fst) . zip [0 ..] . take (1 + floorLog (n + 1)) $ iterate (sqr' m) x
+       in (foldr (mult' m . snd) 1 . filter (testBit n . fst) . zip [0 ..] . take (1 + floorLog (n + 1))) $ iterate (sqr' m) x
 
 -- | The finite nimbers are a field of characteristic 2.  There is no field homomorphism from the rationals to the nimbers, so @'fromRational'@ is always an error.
 instance Fractional Nimber where
