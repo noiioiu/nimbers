@@ -28,7 +28,7 @@ newtype Nimber = Nimber {getNimber :: Natural}
 -- | Index of highest-order set bit, or -1 if there are none.
 floorLog :: (Num a, Bits a, Num b) => a -> b
 floorLog 0 = -1
-floorLog n = 1 + floorLog (n `shiftR` 1)
+floorLog n = 1 + floorLog (n .>>. 1)
 
 mult' :: Int -> Nimber -> Nimber -> Nimber
 mult' _ 0 _ = 0
@@ -37,12 +37,12 @@ mult' _ 1 b = b
 mult' _ a 1 = a
 mult' m a b =
   let semiD = bit (bit m - 1) -- semimultiple of D
-      s1 = a `shiftR` bit m -- a = a1D+a2
-      s2 = a .^. (s1 `shiftL` bit m)
-      t1 = b `shiftR` bit m -- b = b1D+b2
-      t2 = b .^. (t1 `shiftL` bit m)
+      s1 = a .>>. bit m -- a = a1D+a2
+      s2 = a .^. (s1 .<<. bit m)
+      t1 = b .>>. bit m -- b = b1D+b2
+      t2 = b .^. (t1 .<<. bit m)
       c = mult' (m - 1) s2 t2
-   in ((mult' (m - 1) (s1 + s2) (t1 + t2) - c) `shiftL` bit m) + mult' (m - 1) (mult' (m - 1) s1 t1) semiD + c
+   in ((mult' (m - 1) (s1 + s2) (t1 + t2) - c) .<<. bit m) + mult' (m - 1) (mult' (m - 1) s1 t1) semiD + c
 
 -- | Finite nimber addition is calculated as follows: the nimber sum of a two-power and itself is 0, while the nimber sum of a set of distinct two-powers is their ordinary sum.
 --
@@ -64,12 +64,12 @@ sqr' :: Int -> Nimber -> Nimber
 sqr' _ 0 = 0
 sqr' _ 1 = 1
 sqr' m n =
-  let a = n `shiftR` bit m -- n = aD+b
-      aD = a `shiftL` bit m
+  let a = n .>>. bit m -- n = aD+b
+      aD = a .<<. bit m
       b = n .^. aD
       semiD = bit (bit m - 1) -- semimultiple of D
       a2 = sqr' (m - 1) a -- a^2
-   in a2 `shiftL` bit m + mult' (m - 1) a2 semiD + sqr' (m - 1) b
+   in a2 .<<. bit m + mult' (m - 1) a2 semiD + sqr' (m - 1) b
 
 -- | Squaring function.  Faster than multiplying @n@ by itself.
 sqr :: Nimber -> Nimber
@@ -93,8 +93,8 @@ instance Fractional Nimber where
         recip' _ 0 = error "Divide by zero"
         recip' _ 1 = 1
         recip' k l =
-          let a = l `shiftR` bit k -- n = aD+b
-              aD = a `shiftL` bit k
+          let a = l .>>. bit k -- n = aD+b
+              aD = a .<<. bit k
               b = l .^. aD
               semiD = bit (bit k - 1) -- semimultiple of D
            in mult' k (l + a) $ recip' (k - 1) (mult' (k - 1) semiD (sqr' (k - 1) a) + mult' (k - 1) b (a + b))
@@ -107,12 +107,12 @@ instance Floating Nimber where
         sqrt' _ 0 = 0
         sqrt' _ 1 = 1
         sqrt' k l =
-          let a = l `shiftR` bit k -- n = aD+b
-              aD = a `shiftL` bit k
+          let a = l .>>. bit k -- n = aD+b
+              aD = a .<<. bit k
               b = l .^. aD
               semiD = bit (bit k - 1) -- semimultiple of D
               sqrta = sqrt' (k - 1) a
-           in sqrta `shiftL` bit k + mult' (k - 1) sqrta (sqrt' (k - 1) semiD) + sqrt' (k - 1) b
+           in sqrta .<<. bit k + mult' (k - 1) sqrta (sqrt' (k - 1) semiD) + sqrt' (k - 1) b
      in sqrt' m n
   pi = error "π is not a nimber"
   exp _ = error "exp undefined for nimbers"
