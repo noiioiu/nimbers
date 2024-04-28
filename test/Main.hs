@@ -29,6 +29,12 @@ prop_add_id a = a + 0 == a && 0 + a == a
 prop_mult_id :: Nimber -> Bool
 prop_mult_id a = a * 1 == a && 1 * a == a
 
+prop_comm_add :: Nimber -> Nimber -> Bool
+prop_comm_add a b = a + b == b + a
+
+prop_comm_mult :: Nimber -> Nimber -> Bool
+prop_comm_mult a b = a * b == b * a
+
 prop_assoc_add :: Nimber -> Nimber -> Nimber -> Bool
 prop_assoc_add a b c = a + (b + c) == (a + b) + c
 
