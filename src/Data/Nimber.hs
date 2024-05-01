@@ -160,8 +160,9 @@ artinSchreierRoot n =
            in flip clearBit 0 $
                 s
                   + sqr s
-                  + (squares !! (bit m' - 1))
-                    * (1 + sum (take (bit (m' - 2)) $ drop (bit (m' - 2)) quarts))
+                  + mult' m
+                    (squares !! (bit m' - 1))
+                    (1 + sum (take (bit (m' - 2)) $ drop (bit (m' - 2)) quarts))
         else
           let y = bit $ bit m' - 1
               z = artinSchreierRoot $ sqr y + y + n
