@@ -59,7 +59,8 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  Data.Nimber
+    exposed-modules:  Data.Nimber,
+                      Data.Nimber.Finite
 
     -- Modules included in this library but not exported.
     -- other-modules:
