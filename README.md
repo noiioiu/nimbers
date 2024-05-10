@@ -1,1 +1,1 @@
-Finite nimbers in haskell.
+Nimbers in haskell.  Currently only finite nimbers are implemented.
