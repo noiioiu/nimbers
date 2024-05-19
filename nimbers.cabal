@@ -60,7 +60,8 @@ library
 
     -- Modules exported by the library.
     exposed-modules:  Data.Nimber,
-                      Data.Nimber.Finite
+                      Data.Nimber.Finite,
+                      Data.Nimber.Algebraic,
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -70,6 +71,8 @@ library
 
     -- Other library packages from which modules are imported.
     build-depends:    base >=4.16.4.0,
+                      arithmoi,
+                      integer-logarithms,
 
     -- Directories containing source files.
     hs-source-dirs:   src

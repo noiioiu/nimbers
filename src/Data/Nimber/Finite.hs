@@ -9,9 +9,10 @@
 --   Nimber multiplication is defined by \(\alpha\cdot\beta = \operatorname{mex}\{\alpha'\cdot\beta + \alpha\cdot\beta' - \alpha'\cdot\beta'\}\).
 --
 --   This module implements /finite/ nimbers, which form the smallest quadratically closed field of characteristic 2.
+--
+--   In the sequel, we use the convention that expressions surrounded by square brackets are evaluated using ordinal operations, while other expressions are evaluated using nim operations.  For example, \([2\cdot 2] = 4\), but \(2\cdot 2=3\).
 module Data.Nimber.Finite
   ( FiniteNimber (..),
-    floorLog,
     sqr,
     pow,
     artinSchreierRoot,
@@ -21,15 +22,11 @@ where
 
 import Data.Bits
 import Numeric.Natural
+import Math.NumberTheory.Logarithms
 
 newtype FiniteNimber = FiniteNimber {getFiniteNimber :: Natural}
   deriving newtype (Show, Eq, Ord, Enum, Bits)
 
--- | Index of highest-order set bit, or -1 if there are none.
-floorLog :: (Bits a, Num b) => a -> b
-floorLog n
-  | n == zeroBits = -1
-  | otherwise = 1 + floorLog (n .>>. 1)
 
 mult' :: Int -> FiniteNimber -> FiniteNimber -> FiniteNimber
 mult' _ 0 _ = 0
@@ -45,16 +42,16 @@ mult' m a b =
       c = mult' (m - 1) s2 t2
    in ((mult' (m - 1) (s1 + s2) (t1 + t2) - c) .<<. bit m) + mult' (m - 1) (mult' (m - 1) s1 t1) semiD + c
 
--- | Finite nimber addition is calculated as follows: the nimber sum of a two-power and itself is 0, while the nimber sum of a set of distinct two-powers is their ordinary sum.
+-- | Finite nimber addition is calculated as follows: the nim sum of a two-power (Conway's name for a [power] of 2) and itself is 0, while the nim sum of a set of distinct two-powers is equal to their [sum].
 --
---   Finite nimber multiplication is calculated as follows: the nimber square of a Fermat two-power is its sesquimultiple, while the nimber product of a set of distinct Fermat two-powers is their ordinary product.
---   The sesquimultiple of a Fermat two-power is equal to itself plus the product of all smaller Fermat two-powers.
+--   Finite nimber multiplication is calculated as follows: the nim square of a Fermat two-power (a number of the form \(\left[2^{2^n}\right]\) for some \(n\)) is its sesquimultiple, while the nim product of a set of distinct Fermat two-powers is their [product].
+--   The sesquimultiple of a Fermat two-power is equal to itself plus (or [plus]) the product (or [product]) of all smaller Fermat two-powers.
 instance Num FiniteNimber where
   fromInteger = FiniteNimber . fromIntegral . abs
   (+) = xor
   (-) = xor
   a * b =
-    let m = max (floorLog @Int (floorLog a)) (floorLog @Int (floorLog b)) -- D = 2^2^m is the largest Fermat 2-power less than or equal to both a and b
+    let m = max (intLog2 (naturalLog2 $ getFiniteNimber a)) (intLog2 (naturalLog2 $ getFiniteNimber b)) -- D = 2^2^m is the largest Fermat 2-power less than or equal to both a and b
      in mult' m a b
   negate = id
   abs = id
@@ -75,22 +72,22 @@ sqr' m n =
 -- | Squaring function.  Faster than multiplying @n@ by itself.
 sqr :: FiniteNimber -> FiniteNimber
 sqr n =
-  let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+  let m = intLog2 . naturalLog2 $ getFiniteNimber n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
    in sqr' m n
 
 -- | Raise a @'FiniteNimber'@ to an integral power.  Faster than using '^' or '^^'.
-pow :: (Integral a, Bits a) => FiniteNimber -> a -> FiniteNimber
+pow :: FiniteNimber -> Integer -> FiniteNimber
 x `pow` n
   | n < 0 = recip x `pow` negate n
   | otherwise =
-      let m = floorLog @Int $ floorLog x
-       in (foldr (mult' m . snd) 1 . filter (testBit n . fst) . zip [0 ..] . take (1 + floorLog (n + 1))) $ iterate (sqr' m) x
+      let m = intLog2 . naturalLog2 $ getFiniteNimber x
+       in (foldr (mult' m . snd) 1 . filter (testBit n . fst) . zip [0 ..] . take (1 + integerLog2 (n + 1))) $ iterate (sqr' m) x
 
 -- | The finite nimbers are a field of characteristic 2.  There is no field homomorphism from the rationals to the nimbers, so @'fromRational'@ is always an error.
 instance Fractional FiniteNimber where
   fromRational _ = error "Cannot map from field of characteristic 0 to characteristic 2"
   recip n =
-    let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+    let m = intLog2 . naturalLog2 $ getFiniteNimber n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
         recip' _ 0 = error "Divide by zero"
         recip' _ 1 = 1
         recip' k l =
@@ -104,7 +101,7 @@ instance Fractional FiniteNimber where
 -- | The only reason this instance exists is to define square roots.  None of the other @'Floating'@ methods apply to @'FiniteNimber'@s.
 instance Floating FiniteNimber where
   sqrt n =
-    let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+    let m = intLog2 . naturalLog2 $ getFiniteNimber n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
         sqrt' _ 0 = 0
         sqrt' _ 1 = 1
         sqrt' k l =
@@ -146,7 +143,7 @@ artinSchreierRoot 1 = 2
 artinSchreierRoot 2 = 4
 artinSchreierRoot 3 = 6
 artinSchreierRoot n =
-  let m = 1 + floorLog @Int (floorLog n) -- 2^2^m is the order of the smallest field containing n
+  let m = 1 + intLog2 (naturalLog2 $ getFiniteNimber n) -- 2^2^m is the order of the smallest field containing n
       m' = if n < bit (bit m - 1) then m else m + 1 -- 2^2^m' is the order of the smallest field containing the Artin-Schreier root of n
       squares = iterate (sqr' m) n
       quarts = evens squares
