@@ -11,7 +11,6 @@
 --   This module implements /finite/ nimbers, which form the smallest quadratically closed field of characteristic 2.
 module Data.Nimber
   ( Nimber (..),
-    floorLog,
     sqr,
     pow,
     artinSchreierRoot,
@@ -21,15 +20,10 @@ where
 
 import Data.Bits
 import Numeric.Natural
+import Math.NumberTheory.Logarithms
 
 newtype Nimber = Nimber {getNimber :: Natural}
   deriving newtype (Show, Eq, Ord, Enum, Bits)
-
--- | Index of highest-order set bit, or -1 if there are none.
-floorLog :: (Bits a, Num b) => a -> b
-floorLog n
-  | n == zeroBits = -1
-  | otherwise = 1 + floorLog (n .>>. 1)
 
 mult' :: Int -> Nimber -> Nimber -> Nimber
 mult' _ 0 _ = 0
@@ -54,7 +48,7 @@ instance Num Nimber where
   (+) = xor
   (-) = xor
   a * b =
-    let m = max (floorLog @Int (floorLog a)) (floorLog @Int (floorLog b)) -- D = 2^2^m is the largest Fermat 2-power less than or equal to both a and b
+    let m = max (intLog2 (naturalLog2 $ getNimber a)) (intLog2 (naturalLog2 $ getNimber b)) -- D = 2^2^m is the largest Fermat 2-power less than or equal to both a and b
      in mult' m a b
   negate = id
   abs = id
@@ -75,22 +69,22 @@ sqr' m n =
 -- | Squaring function.  Faster than multiplying @n@ by itself.
 sqr :: Nimber -> Nimber
 sqr n =
-  let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+  let m = intLog2 . naturalLog2 $ getNimber n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
    in sqr' m n
 
--- | Raise a @'Nimber'@ to an integral power.  Faster than using '^' or '^^'.
-pow :: (Integral a, Bits a) => Nimber -> a -> Nimber
+-- | Raise a @'Nimber'@ to an integer power.  Faster than using '^' or '^^'.
+pow :: Nimber -> Integer -> Nimber
 x `pow` n
   | n < 0 = recip x `pow` negate n
   | otherwise =
-      let m = floorLog @Int $ floorLog x
-       in (foldr (mult' m . snd) 1 . filter (testBit n . fst) . zip [0 ..] . take (1 + floorLog (n + 1))) $ iterate (sqr' m) x
+      let m = intLog2 . naturalLog2 $ getNimber x
+       in (foldr (mult' m . snd) 1 . filter (testBit n . fst) . zip [0 ..] . take (1 + integerLog2 (n + 1))) $ iterate (sqr' m) x
 
 -- | The finite nimbers are a field of characteristic 2.  There is no field homomorphism from the rationals to the nimbers, so @'fromRational'@ is always an error.
 instance Fractional Nimber where
   fromRational _ = error "Cannot map from field of characteristic 0 to characteristic 2"
   recip n =
-    let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+    let m = intLog2 . naturalLog2 $ getNimber n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
         recip' _ 0 = error "Divide by zero"
         recip' _ 1 = 1
         recip' k l =
@@ -104,7 +98,7 @@ instance Fractional Nimber where
 -- | The only reason this instance exists is to define square roots.  None of the other @'Floating'@ methods apply to @'Nimber'@s.
 instance Floating Nimber where
   sqrt n =
-    let m = floorLog @Int $ floorLog n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
+    let m = intLog2 . naturalLog2 $ getNimber n -- D = 2^2^m is the largest Fermat 2-power less than or equal to n
         sqrt' _ 0 = 0
         sqrt' _ 1 = 1
         sqrt' k l =
@@ -146,7 +140,7 @@ artinSchreierRoot 1 = 2
 artinSchreierRoot 2 = 4
 artinSchreierRoot 3 = 6
 artinSchreierRoot n =
-  let m = 1 + floorLog @Int (floorLog n) -- 2^2^m is the order of the smallest field containing n
+  let m = 1 + intLog2 (naturalLog2 $ getNimber n) -- 2^2^m is the order of the smallest field containing n
       m' = if n < bit (bit m - 1) then m else m + 1 -- 2^2^m' is the order of the smallest field containing the Artin-Schreier root of n
       squares = iterate (sqr' m) n
       quarts = evens squares
