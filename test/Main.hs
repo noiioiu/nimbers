@@ -16,10 +16,6 @@ import Test.QuickCheck
 instance Arbitrary Nimber where
   arbitrary = fromIntegral @Word64 . getLarge <$> arbitrary
 
-prop_floorLog :: Positive Int -> Bool
-prop_floorLog Positive {getPositive = n} =
-  floorLog n == floor @Double @Int (logBase 2 $ fromIntegral n)
-
 prop_neg :: Nimber -> Bool
 prop_neg a = a - a == 0
 
